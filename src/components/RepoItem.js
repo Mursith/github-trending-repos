@@ -1,6 +1,14 @@
 import { FaStar } from "react-icons/fa";
 import "./RepoItem.css";
 
+
+const formatStars = (stars) => {
+  if (stars >= 1000) {
+    return (stars / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  }
+  return stars;
+};
+
 const RepoItem = ({ repo }) => {
   return (
     <div className="repo-item">
@@ -16,7 +24,7 @@ const RepoItem = ({ repo }) => {
           <span>{repo.owner.login}</span>
         </div>
         <div className="stars">
-          <FaStar color="black" /> {repo.stargazers_count.toLocaleString()}
+          <FaStar color="black" /> {formatStars(repo.stargazers_count)}
         </div>
       </div>
     </div>
