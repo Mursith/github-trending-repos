@@ -7,6 +7,7 @@ const App = () => {
   const [repos, setRepos] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const date = new Date();
   date.setDate(date.getDate() - 10);
@@ -14,16 +15,21 @@ const App = () => {
 
   const fetchRepos = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(
         `https://api.github.com/search/repositories?q=created:>${formattedDate}&sort=stars&order=desc&page=${page}`
       );
+      if (!response.ok) {
+        throw new Error("Failed to fetch data from GitHub API");
+      }
       const data = await response.json();
       if (data.items) {
         setRepos((prev) => [...prev, ...data.items]);
       }
     } catch (error) {
       console.error("Error fetching repos:", error);
+      setError("Failed to load repositories. Please try again.");
     }
     setLoading(false);
   };
@@ -49,8 +55,13 @@ const App = () => {
   return (
     <div className="app-container">
       <header className="header">Trending Repos</header>
+      {error && <div className="error">{error}</div>}
       <RepoList repos={repos} />
-      {loading && <p className="loading">Loading...</p>}
+      {loading && (
+        <div className="spinner-container">
+          <div className="spinner"></div>
+        </div>
+      )}
       <NavBar />
     </div>
   );
