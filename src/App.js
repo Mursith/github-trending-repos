@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import RepoList from "./components/RepoList";
 import NavBar from "./components/NavBar";
+import Loader from "./components/Loader";
+import useInfiniteScroll from "./hooks/useInfiniteScroll";
+import { BASE_URL } from "./config";
 import "./App.css";
 
 const App = () => {
@@ -13,12 +16,12 @@ const App = () => {
   date.setDate(date.getDate() - 10);
   const formattedDate = date.toISOString().split("T")[0];
 
-  const fetchRepos = async () => {
+  const fetchRepos = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(
-        `https://api.github.com/search/repositories?q=created:>${formattedDate}&sort=stars&order=desc&page=${page}`
+        `${BASE_URL}?q=created:>${formattedDate}&sort=stars&order=desc&page=${page}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch data from GitHub API");
@@ -32,36 +35,20 @@ const App = () => {
       setError("Failed to load repositories. Please try again.");
     }
     setLoading(false);
-  };
+  }, [page, formattedDate]);
 
   useEffect(() => {
     fetchRepos();
-  }, [page]);
+  }, [fetchRepos]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop + 100 >=
-          document.documentElement.scrollHeight &&
-        !loading
-      ) {
-        setPage((prev) => prev + 1);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loading]);
+  useInfiniteScroll(() => setPage((prev) => prev + 1), loading);
 
   return (
     <div className="app-container">
       <header className="header">Trending Repos</header>
       {error && <div className="error">{error}</div>}
       <RepoList repos={repos} />
-      {loading && (
-        <div className="spinner-container">
-          <div className="spinner"></div>
-        </div>
-      )}
+      {loading && <Loader />}
       <NavBar />
     </div>
   );
